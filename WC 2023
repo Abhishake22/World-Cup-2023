@@ -1,0 +1,42 @@
+
+--Top Run Scorers from Each Country
+
+WITH Top_10_batsmen AS (
+SELECT Player,country,Runs,Bat_Ave,Bat_SR,DENSE_RANK() OVER (PARTITION BY country ORDER BY Runs desc) as Ranking
+FROM [dbo].[statistics]
+)
+SELECT Player,country,Runs,ROUND(Bat_Ave,2) AS Batting_Average,ROUND(Bat_SR,2) AS Batting_Strike_Rate
+FROM Top_10_batsmen
+WHERE Ranking = 1
+ORDER BY Runs desc
+
+
+---Top 10 Wicket Takers from Each Team
+
+WITH CTE AS (SELECT Player,country,Wkts,Bowl_SR,DENSE_RANK() OVER (PARTITION BY country ORDER BY wkts desc) as Ranking
+FROM [dbo].[statistics]
+)
+SELECT Player,country,Wkts,ROUND(Bowl_SR,2) AS Bowling_SR
+FROM CTE
+WHERE Ranking = 1
+ORDER BY wkts desc
+
+
+--Top 10 Bowling Strike Rates of wc2023 (Min 60 balls)
+
+SELECT Top 10 Player,country,ROUND(Bowl_SR,2) AS Bowling_Strike_Rate
+FROM [dbo].[statistics]
+WHERE Balls > 60 AND Bowl_SR > 0
+ORDER BY Bowling_Strike_Rate asc
+
+
+---Players with Most contribution for team in runs
+
+WITH CTE AS (SELECT player,country,Runs,SUM(Runs) OVER (PARTITION BY country) AS Team_Runs,
+(Runs * 100) / SUM(Runs) OVER (PARTITION BY country) as contribution_Percentage
+FROM [dbo].[statistics]
+)
+SELECT TOP 10 * from CTE
+ORDER BY contribution_Percentage desc
+
+
